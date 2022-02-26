@@ -1,18 +1,30 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
+
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
-        ThreadGroup mainGroup = new ThreadGroup("mainGroup");
-        mainGroup.setMaxPriority(3);
-        Thread thread1 = new MyThread(mainGroup, "Thread 1");
-        Thread thread2 = new MyThread(mainGroup, "Thread 2");
-        Thread thread3 = new MyThread(mainGroup, "Thread 3");
-        Thread thread4 = new MyThread(mainGroup, "Thread 4");
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        final ExecutorService threadPool = Executors.newFixedThreadPool(4);
+        List<Callable<Integer>> tasks = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            tasks.add(() -> {
+                int count = 0;
+                for (int j = 0; j < 3; j++) {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException ignored) {
+                    }
+                    System.out.printf("I'm %s. Hello everybody!\n", Thread.currentThread().getName());
+                    count++;
+                }
+                return count;
+            });
+        }
 
-        thread1.start();
-        thread2.start();
-        thread3.start();
-        thread4.start();
+        threadPool.invokeAll(tasks);
 
-        Thread.sleep(15000);
-        mainGroup.interrupt();
+        System.out.println(threadPool.invokeAny(tasks));
+
+        threadPool.shutdown();
     }
 }
